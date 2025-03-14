@@ -6,6 +6,14 @@
 # ]
 # ///
 
+"""Clone a GitHub repository into ~/repos/python and install it in development mode.
+
+Usage:
+
+    $ uv run --active github_clone_dev.py username/repo
+
+"""
+
 import os
 import sys
 import click
