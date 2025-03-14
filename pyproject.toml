@@ -80,3 +80,7 @@ unfixable = []
     "C408",  # Unnecessary `dict` call (rewrite as a literal)
     "S101",  # Use of `assert` detected
 ]
+
+[tool.pytest.ini_options]
+# Also run test functions found in tool scripts:
+python_files = "*.py"
