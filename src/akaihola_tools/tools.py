@@ -11,6 +11,8 @@ Examples:
   tools --python 3.9 github_clone_dev repo  # Run with Python 3.9
 
 """
+from __future__ import annotations
+
 import importlib
 import subprocess
 import sys
@@ -105,14 +107,22 @@ def run_tool(args):
     subprocess.run(cmd, check=False)
 
 
-def main():
-    """Main entry point for the tools command."""
-    if len(sys.argv) == 1:
-        # No arguments, list available tools
+def main(args: list[str] | None = None) -> None:
+    """Execute the tools command.
+
+    Args:
+        args: Command line arguments. If None, sys.argv[1:] is used.
+
+    """
+    if args is None:
+        args = sys.argv[1:]
+
+    if len(args) == 0 or "--list" in args:
+        # No arguments or --list flag, list available tools
         list_tools()
     else:
         # Run the specified tool
-        run_tool(sys.argv[1:])
+        run_tool(args)
 
 
 if __name__ == "__main__":
