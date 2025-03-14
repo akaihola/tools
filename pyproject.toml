@@ -9,7 +9,7 @@ description = "Collection of useful Python tools"
 authors = [
     {name = "Antti Kaihola", email = "13725+akaihola@users.noreply.github.com"},
 ]
-readme = "README.md"
+readme = "README.rst"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 classifiers = [
