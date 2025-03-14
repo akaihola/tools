@@ -13,7 +13,7 @@ Examples:
 """
 from __future__ import annotations
 
-import importlib
+import ast
 import subprocess
 import sys
 from pathlib import Path
@@ -44,15 +44,20 @@ def get_tools():
         # Get the module name
         module_name = file.stem
 
-        # Try to import the module to get its docstring
+        # Extract the docstring using ast instead of importing
         try:
-            module = importlib.import_module(f"{package_name}.{module_name}")
+            with file.open(encoding="utf-8") as f:
+                module_content = f.read()
+
+            module_ast = ast.parse(module_content)
+            docstring = ast.get_docstring(module_ast)
+
             description = (
-                module.__doc__.strip().split("\n")[0]
-                if module.__doc__
+                docstring.strip().split("\n")[0]
+                if docstring
                 else "No description available"
             )
-        except (ImportError, AttributeError):
+        except (OSError, SyntaxError, AttributeError):
             description = "No description available"
 
         tools.append((module_name, description))
