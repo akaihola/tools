@@ -63,12 +63,7 @@ def main(repo=None):
     command = ["uv", "pip", "install", "-e", str(target_dir)]
     click.echo(f"Running command: {' '.join(command)}")
     try:
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            check=True
-        )
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
         click.echo(f"Successfully installed {repo_name} in development mode")
         click.echo(result.stdout)
     except subprocess.CalledProcessError as e:
