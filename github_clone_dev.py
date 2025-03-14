@@ -52,9 +52,11 @@ def main(repo=None):
 
     # Install in development mode using UV
     click.echo(f"Installing {repo_name} in development mode...")
+    command = ["uv", "pip", "install", "-e", str(target_dir)]
+    click.echo(f"Running command: {' '.join(command)}")
     try:
         result = subprocess.run(
-            ["uv", "pip", "install", "-e", str(target_dir)],
+            command,
             capture_output=True,
             text=True,
             check=True
