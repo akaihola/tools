@@ -14,16 +14,16 @@ Usage:
 
 """
 
-import os
+import subprocess
 import sys
+from pathlib import Path
+
 import click
 import git
-import subprocess
-from pathlib import Path
 
 
 @click.command()
-@click.argument('repo', required=False)
+@click.argument("repo", required=False)
 def main(repo=None):
     """Clone a GitHub repository into ~/repos/python and install it in development mode."""
     # Get the repository name if not provided
