@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open URL</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 2rem 2.5rem;
+      max-width: 680px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #f0f6fc;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      color: #8b949e;
+      margin-bottom: 1.5rem;
+    }
+
+    .url-box {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+      font-size: 0.85rem;
+      color: #79c0ff;
+      word-break: break-all;
+      text-align: left;
+      margin-bottom: 1.5rem;
+      min-height: 2.5rem;
+    }
+
+    .btn {
+      display: inline-block;
+      background: #238636;
+      color: #fff;
+      border: 1px solid rgba(240,246,252,0.1);
+      border-radius: 8px;
+      padding: 0.6rem 1.4rem;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn:hover { background: #2ea043; }
+    .btn:active { background: #1a7f37; }
+    .btn[hidden] { display: none; }
+
+    .note {
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+      color: #8b949e;
+    }
+
+    .usage {
+      margin-top: 2rem;
+      text-align: left;
+    }
+
+    .usage h2 {
+      font-size: 0.95rem;
+      color: #8b949e;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .usage code {
+      display: block;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+      font-size: 0.78rem;
+      color: #a5d6ff;
+      word-break: break-all;
+      margin-bottom: 0.4rem;
+    }
+
+    .error { color: #f85149; margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="heading">Opening URL…</h1>
+    <p class="subtitle" id="subtitle">You will be redirected in a moment.</p>
+
+    <div class="url-box" id="url-display" aria-label="Target URL"></div>
+
+    <a class="btn" id="open-btn" href="#" hidden>Open</a>
+    <p class="note" id="note" hidden>
+      Auto-redirect blocked by your browser. Click <strong>Open</strong> to proceed.
+    </p>
+
+    <div class="usage" id="usage" hidden>
+      <h2>Usage</h2>
+      <p style="font-size:0.85rem;color:#8b949e;margin-bottom:0.75rem;">
+        Append the target URL as a <code style="display:inline;background:none;border:none;padding:0;color:#a5d6ff">?url=</code>
+        query parameter (percent-encoded) or after a <code style="display:inline;background:none;border:none;padding:0;color:#a5d6ff">#</code> hash:
+      </p>
+      <code>…/open-url/?url=vscode%3A%2F%2Ffile%2Fsome%2Fpath</code>
+      <code>…/open-url/#vscode://file/some/path</code>
+      <code>…/open-url/#file:///C:/path/to/folder</code>
+      <code>…/open-url/#myapp://open?path=foo</code>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // Resolve target URL: prefer ?url= param, fall back to hash
+      var params = new URLSearchParams(location.search);
+      var target = params.get('url');
+      if (!target && location.hash.length > 1) {
+        target = decodeURIComponent(location.hash.slice(1));
+      }
+
+      var heading    = document.getElementById('heading');
+      var subtitle   = document.getElementById('subtitle');
+      var urlDisplay = document.getElementById('url-display');
+      var openBtn    = document.getElementById('open-btn');
+      var note       = document.getElementById('note');
+      var usage      = document.getElementById('usage');
+
+      if (!target) {
+        heading.textContent  = 'Open URL';
+        subtitle.textContent = 'No target URL supplied.';
+        urlDisplay.hidden    = true;
+        usage.hidden         = false;
+        return;
+      }
+
+      urlDisplay.textContent = target;
+      openBtn.href           = target;
+      openBtn.hidden         = false;
+
+      // Attempt redirect; for file:// the browser will likely block it, so
+      // we always show the button as a fallback.
+      try {
+        window.location.href = target;
+        // Show note in case the page stays (custom-protocol dialog shown)
+        setTimeout(function () { note.hidden = false; }, 1500);
+      } catch (e) {
+        heading.textContent  = 'Ready to open';
+        subtitle.textContent = 'Auto-redirect was blocked. Click the button below.';
+        note.hidden          = false;
+      }
+    })();
+  </script>
+</body>
+</html>
