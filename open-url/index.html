@@ -29,18 +29,9 @@
       text-align: center;
     }
 
-    h1 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      color: #f0f6fc;
-    }
+    h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; color: #f0f6fc; }
 
-    .subtitle {
-      font-size: 0.875rem;
-      color: #8b949e;
-      margin-bottom: 1.5rem;
-    }
+    .subtitle { font-size: 0.875rem; color: #8b949e; margin-bottom: 1.5rem; }
 
     .url-box {
       background: #0d1117;
@@ -69,10 +60,25 @@
       cursor: pointer;
       transition: background 0.15s;
     }
-
-    .btn:hover { background: #2ea043; }
+    .btn:hover  { background: #2ea043; }
     .btn:active { background: #1a7f37; }
-    .btn[hidden] { display: none; }
+    .btn[hidden]{ display: none; }
+
+    .btn-copy {
+      display: inline-block;
+      background: #21262d;
+      color: #cdd9e5;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 0.5rem 1.1rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 0.75rem;
+    }
+    .btn-copy:hover  { background: #30363d; }
+    .btn-copy[hidden]{ display: none; }
 
     .note {
       margin-top: 1.25rem;
@@ -80,34 +86,31 @@
       color: #8b949e;
     }
 
-    .usage {
-      margin-top: 2rem;
+    .blocked-box {
+      background: #1c1008;
+      border: 1px solid #9e6a03;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
       text-align: left;
+      font-size: 0.85rem;
+      color: #d29922;
+      margin-bottom: 1rem;
     }
+    .blocked-box strong { color: #e3b341; }
+    .blocked-box[hidden]{ display: none; }
 
+    .usage { margin-top: 2rem; text-align: left; }
     .usage h2 {
-      font-size: 0.95rem;
-      color: #8b949e;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 0.95rem; color: #8b949e; font-weight: 600;
+      margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
     }
-
     .usage code {
       display: block;
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 6px;
+      background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
       padding: 0.5rem 0.75rem;
       font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
-      font-size: 0.78rem;
-      color: #a5d6ff;
-      word-break: break-all;
-      margin-bottom: 0.4rem;
+      font-size: 0.78rem; color: #a5d6ff; word-break: break-all; margin-bottom: 0.4rem;
     }
-
-    .error { color: #f85149; margin-bottom: 0.5rem; }
   </style>
 </head>
 <body>
@@ -117,39 +120,61 @@
 
     <div class="url-box" id="url-display" aria-label="Target URL"></div>
 
+    <!-- Shown for file:// (and other blocked schemes) -->
+    <div class="blocked-box" id="blocked-box" hidden>
+      <strong>⚠ Cannot open this URL automatically.</strong><br><br>
+      Browsers block navigation from HTTPS pages to <code id="blocked-scheme"
+        style="display:inline;background:none;border:none;padding:0;color:#e3b341;font-size:inherit"
+      >file://</code> URLs as a security measure — clicking a link won't work either.<br><br>
+      Copy the path below and open it directly in your file manager or address bar.
+    </div>
+
+    <!-- Copy-to-clipboard button (shown for blocked URLs) -->
+    <button class="btn-copy" id="copy-btn" hidden>Copy path</button>
+
+    <!-- Open button for custom protocols -->
     <a class="btn" id="open-btn" href="#" hidden>Open</a>
+
     <p class="note" id="note" hidden>
-      Auto-redirect blocked by your browser. Click <strong>Open</strong> to proceed.
+      Your browser may show a confirmation dialog — allow it to open the application.
     </p>
 
+    <!-- No URL supplied: show usage -->
     <div class="usage" id="usage" hidden>
       <h2>Usage</h2>
       <p style="font-size:0.85rem;color:#8b949e;margin-bottom:0.75rem;">
-        Append the target URL as a <code style="display:inline;background:none;border:none;padding:0;color:#a5d6ff">?url=</code>
-        query parameter (percent-encoded) or after a <code style="display:inline;background:none;border:none;padding:0;color:#a5d6ff">#</code> hash:
+        Append the target URL as a
+        <code style="display:inline;background:none;border:none;padding:0;color:#a5d6ff">?url=</code>
+        query parameter (percent-encoded) or after a
+        <code style="display:inline;background:none;border:none;padding:0;color:#a5d6ff">#</code> hash:
       </p>
-      <code>…/open-url/?url=vscode%3A%2F%2Ffile%2Fsome%2Fpath</code>
       <code>…/open-url/#vscode://file/some/path</code>
-      <code>…/open-url/#file:///C:/path/to/folder</code>
       <code>…/open-url/#myapp://open?path=foo</code>
+      <code>…/open-url/?url=vscode%3A%2F%2Ffile%2Fsome%2Fpath</code>
+      <p style="font-size:0.8rem;color:#8b949e;margin-top:0.75rem;">
+        ⚠ <code style="display:inline;background:none;border:none;padding:0;color:#8b949e">file://</code>
+        URLs cannot be opened from HTTPS pages due to browser security policy.
+      </p>
     </div>
   </div>
 
   <script>
     (function () {
-      // Resolve target URL: prefer ?url= param, fall back to hash
       var params = new URLSearchParams(location.search);
       var target = params.get('url');
       if (!target && location.hash.length > 1) {
         target = decodeURIComponent(location.hash.slice(1));
       }
 
-      var heading    = document.getElementById('heading');
-      var subtitle   = document.getElementById('subtitle');
-      var urlDisplay = document.getElementById('url-display');
-      var openBtn    = document.getElementById('open-btn');
-      var note       = document.getElementById('note');
-      var usage      = document.getElementById('usage');
+      var heading     = document.getElementById('heading');
+      var subtitle    = document.getElementById('subtitle');
+      var urlDisplay  = document.getElementById('url-display');
+      var blockedBox  = document.getElementById('blocked-box');
+      var blockedScheme = document.getElementById('blocked-scheme');
+      var copyBtn     = document.getElementById('copy-btn');
+      var openBtn     = document.getElementById('open-btn');
+      var note        = document.getElementById('note');
+      var usage       = document.getElementById('usage');
 
       if (!target) {
         heading.textContent  = 'Open URL';
@@ -160,18 +185,40 @@
       }
 
       urlDisplay.textContent = target;
-      openBtn.href           = target;
-      openBtn.hidden         = false;
 
-      // Attempt redirect; for file:// the browser will likely block it, so
-      // we always show the button as a fallback.
-      try {
-        window.location.href = target;
-        // Show note in case the page stays (custom-protocol dialog shown)
-        setTimeout(function () { note.hidden = false; }, 1500);
-      } catch (e) {
+      // Protocols that browsers will always block from HTTPS origins
+      var scheme = (target.match(/^([a-z][a-z0-9+\-.]*):\/\//i) || [])[1] || '';
+      var blocked = scheme === 'file';
+
+      if (blocked) {
+        heading.textContent  = 'Cannot open this URL';
+        subtitle.textContent = 'Browser security prevents HTTPS pages from opening ' + scheme + ':// URLs.';
+        subtitle.style.color = '#d29922';
+        blockedScheme.textContent = scheme + '://';
+        blockedBox.hidden    = false;
+
+        // Offer copy-to-clipboard for the path portion
+        var path = target.replace(/^file:\/\//, '').replace(/\//g, '\\');
+        copyBtn.textContent = 'Copy path  ' + path;
+        copyBtn.hidden      = false;
+        copyBtn.addEventListener('click', function () {
+          navigator.clipboard.writeText(path).then(function () {
+            copyBtn.textContent = '✓ Copied!';
+            setTimeout(function () { copyBtn.textContent = 'Copy path  ' + path; }, 2000);
+          }).catch(function () {
+            // Fallback: select the text in the url-box
+            var range = document.createRange();
+            range.selectNodeContents(urlDisplay);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+          });
+        });
+      } else {
+        // Custom protocol — a plain anchor click is the most reliable trigger
         heading.textContent  = 'Ready to open';
-        subtitle.textContent = 'Auto-redirect was blocked. Click the button below.';
+        subtitle.textContent = 'Click the button to launch the application.';
+        openBtn.href         = target;
+        openBtn.hidden       = false;
         note.hidden          = false;
       }
     })();
